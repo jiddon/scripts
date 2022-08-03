@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates
+import numpy as np
 from datetime import datetime
 
 def get_data():
@@ -17,7 +18,7 @@ def get_data():
         datetime(2022,5,2):  {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}, "noise":{"mean":148, "std":17}},
         datetime(2022,4,26): {"thr":{"mean":1489, "std":14}, "tot":{"mean":10.27, "std":0.04}, "noise":{"mean":148, "std":17}},
         datetime(2022,4,20): {"thr":{"mean":1495, "std":13}, "tot":{"mean":10.24, "std":0.04}, "noise":{"mean":148, "std":17}},
-        datetime(2022,4,4):  {"thr":{"mean":1504, "std":11}, "tot":{"mean":10.17, "std":0.03}, "noise":{"mean":148, "std":17}},
+        datetime(2022,4,4):  {"thr":{"mean":1504, "std":11}, "tot":{"mean":10.17, "std":0.03}, "noise":{"mean":148, "std":17}}
         #datetime(2021,10,13):{"thr":{"mean":1522, "std":15}, "tot":{"mean":10.03, "std":0.03}, "noise":{"mean":148, "std":18}},
         #datetime(2018,12,6): {"thr":{"mean":2022, "std":70}, "tot":{"mean":, "std":}, "noise":{"mean":144, "std":13}},
     }
@@ -34,16 +35,21 @@ def plot(data, key):
         x.append(date)
         y.append(data[date][key]["mean"])
         yerr.append(data[date][key]["std"])
+    mean = np.array([np.mean(y) for i in range(len(y))])
+    stdev = np.array([np.std(y) for i in range(len(y))])
+
     fig, ax = plt.subplots()
     fig.set_size_inches(8, 6)
-    plt.errorbar(x,y,yerr, fmt="xk", ecolor="r")
+    plt.errorbar(x, y, yerr, fmt="xk", ecolor="r")
+    #plt.plot(x, mean, "--", label="mean")
+    #plt.fill_between(x, np.subtract(mean,stdev), np.add(mean,stdev), facecolor="orange", alpha=0.3, label="$1\sigma$ range")
+    ax.legend(loc="lower left")
     ax.set_xlabel("Date of monitoring scan", fontsize=18)
     ax.set_ylabel(key_to_label[key], fontsize=18)
     ax.tick_params(axis="both", labelsize=14)
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig(key+".png")
-    #plt.show()
     print(f"saved "+key+".png")
     plt.close()
 
