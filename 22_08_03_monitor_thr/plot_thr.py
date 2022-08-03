@@ -17,7 +17,7 @@ def get_data():
         datetime(2022,5,2):  {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}},
     }
 
-    return thr
+    return data
 
 def plot(data, key):
     """
@@ -38,6 +38,7 @@ def plot(data, key):
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig(key+".png")
+    plt.show()
     print(f"saved "+key+".png")
     plt.close()
 
