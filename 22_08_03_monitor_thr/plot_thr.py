@@ -43,7 +43,7 @@ def plot(data, key):
     plt.errorbar(x, y, yerr, fmt="xk", ecolor="r")
     #plt.plot(x, mean, "--", label="mean")
     #plt.fill_between(x, np.subtract(mean,stdev), np.add(mean,stdev), facecolor="orange", alpha=0.3, label="$1\sigma$ range")
-    ax.legend(loc="lower left")
+    #ax.legend(loc="lower left")
     ax.set_xlabel("Date of monitoring scan", fontsize=18)
     ax.set_ylabel(key_to_label[key], fontsize=18)
     ax.tick_params(axis="both", labelsize=14)
