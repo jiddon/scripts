@@ -4,8 +4,7 @@ from datetime import datetime
 
 def get_data():
     """
-    fill dict with thr on a given date
-    upgrade to scrape https://elog-atlas-pixel.web.cern.ch/Detector/?Type=%5EMonitoring+Scan%24
+    fill dict
     """
     data = {
         datetime(2022,8,3):  {"thr":{"mean":1430, "std":66}, "tot":{"mean":9.97, "std":0.24}},
