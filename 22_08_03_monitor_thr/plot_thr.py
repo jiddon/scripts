@@ -8,14 +8,14 @@ def get_data():
     upgrade to scrape https://elog-atlas-pixel.web.cern.ch/Detector/?Type=%5EMonitoring+Scan%24
     """
     data = {
-        datetime(2022,8,3): {"thr":{"mean":1430, "std":66}, "tot":{"mean":9.97, "std":0.24}},
+        datetime(2022,8,3):  {"thr":{"mean":1430, "std":66}, "tot":{"mean":9.97, "std":0.24}},
         datetime(2022,7,27): {"thr":{"mean":1432, "std":48}, "tot":{"mean":10.36, "std":0.14}},
         datetime(2022,7,12): {"thr":{"mean":1475, "std":20}, "tot":{"mean":10.35, "std":0.06}},
-        datetime(2022,6,7): {"thr":{"mean":1477, "std":22}, "tot":{"mean":10.34, "std":0.05}},
-        datetime(2022,6,3): {"thr":{"mean":1484, "std":16}, "tot":{"mean":10.33, "std":0.04}},
+        datetime(2022,6,7):  {"thr":{"mean":1477, "std":22}, "tot":{"mean":10.34, "std":0.05}},
+        datetime(2022,6,3):  {"thr":{"mean":1484, "std":16}, "tot":{"mean":10.33, "std":0.04}},
         datetime(2022,5,25): {"thr":{"mean":1481, "std":15}, "tot":{"mean":10.32, "std":0.04}},
-        datetime(2022,5,10): {"thr":{"mean":1482, "std":1}, "tot":{"mean":10.3, "std":0.01}},
-        datetime(2022,5,2): {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}},
+        datetime(2022,5,10): {"thr":{"mean":1482, "std":16}, "tot":{"mean":10.3, "std":0.04}},
+        datetime(2022,5,2):  {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}},
     }
 
     return thr
