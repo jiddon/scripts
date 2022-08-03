@@ -14,7 +14,12 @@ def get_data():
         datetime(2022,6,3):  {"thr":{"mean":1484, "std":16}, "tot":{"mean":10.33, "std":0.04}, "noise":{"mean":147, "std":16}},
         datetime(2022,5,25): {"thr":{"mean":1481, "std":15}, "tot":{"mean":10.32, "std":0.04}, "noise":{"mean":148, "std":17}},
         datetime(2022,5,10): {"thr":{"mean":1482, "std":16}, "tot":{"mean":10.3, "std":0.04}, "noise":{"mean":147, "std":17}},
-        datetime(2022,5,2):  {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}, "noise":{"mean":148, "std":17}}
+        datetime(2022,5,2):  {"thr":{"mean":1487, "std":15}, "tot":{"mean":10.28, "std":0.04}, "noise":{"mean":148, "std":17}},
+        datetime(2022,4,26): {"thr":{"mean":1489, "std":14}, "tot":{"mean":10.27, "std":0.04}, "noise":{"mean":148, "std":17}},
+        datetime(2022,4,20): {"thr":{"mean":1495, "std":13}, "tot":{"mean":10.24, "std":0.04}, "noise":{"mean":148, "std":17}},
+        datetime(2022,4,4):  {"thr":{"mean":1504, "std":11}, "tot":{"mean":10.17, "std":0.03}, "noise":{"mean":148, "std":17}},
+        #datetime(2021,10,13):{"thr":{"mean":1522, "std":15}, "tot":{"mean":10.03, "std":0.03}, "noise":{"mean":148, "std":18}},
+        #datetime(2018,12,6): {"thr":{"mean":2022, "std":70}, "tot":{"mean":, "std":}, "noise":{"mean":144, "std":13}},
     }
 
     return data
