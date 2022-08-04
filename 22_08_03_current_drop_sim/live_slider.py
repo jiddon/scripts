@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 
 def update(val):
-    data = sl.generate_samples(5000, True, n=sn.val, w=sw.val, x=sx.val, y=sy.val, z=sz.val)
+    data = sl.generate_samples(5000, n=sn.val, w=sw.val, x=sx.val, y=sy.val, z=sz.val)
     ax.cla()
     ax.hist(data, bins=[i for i in range(0, 65, 5)])
     plt.draw()
@@ -26,7 +26,7 @@ y = 0.1 # two FEs
 z = 0.1 # three FEs
 n = 0.1 # noise
 
-data = sl.generate_samples(5000, True, w, x, y, z, n)
+data = sl.generate_samples(5000, w, x, y, z, n)
 plt.hist(data, bins=[i for i in range(0, 65, 5)])
 
 #[left, bottom, width, height]
