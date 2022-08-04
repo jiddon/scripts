@@ -22,8 +22,7 @@ def get_gauss_min_cut(mean, sigma, min_cut):
             n = get_rand_gauss(5,3)
         return n
 
-def generate_samples(num_samples, slider=False,
-    w=None, x=None, y=None, z=None, n=None):
+def generate_samples(num_samples, w=None, x=None, y=None, z=None, n=None):
     """
     Generate noise x% of the time, one FE loss y% of
     the time and two FE loss z% of the time. Tune x,
