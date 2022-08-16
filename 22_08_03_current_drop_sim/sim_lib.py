@@ -24,9 +24,9 @@ def get_gauss_min_cut(mean, sigma, min_cut):
 
 def generate_samples(num_samples, w=None, x=None, y=None, z=None, n=None):
     """
-    Generate noise x% of the time, one FE loss y% of
-    the time and two FE loss z% of the time. Tune x,
-    y and z to see if distibution looks like reality.
+    Generate noise n% of the time, one FE loss x% of
+    the time and two FE loss y% of the time. Tune x,
+    y and n to see if distibution looks like reality.
     """
     ########## Settings ##########
     if not w:
@@ -40,11 +40,11 @@ def generate_samples(num_samples, w=None, x=None, y=None, z=None, n=None):
     if not n:
         n = 0.1 # noise
 
-    meanw = 5
-    stdw = 3
-    meanx = 18.75 # FE config loss
+    meanw = 5 # mean for small drops
+    stdw = 3 # stdev for small drops
+    meanx = 18.75 # mean for one FE loss
     stdx = 3
-    meany = 2*18.75
+    meany = 2*18.75 # mean for 2 FE loss
     stdy = 3
     meanz = 3*18.75
     stdz = 3
