@@ -4,8 +4,6 @@ import numpy as np
 from datetime import datetime
 import matplotlib.dates as mdates
 
-#     keys_PIX = {"tot":["L0_ToT", "!L0_ToT"], "tote":["L0_ToTe", "!L0_ToTe"], "thr":["L0_thr_Inner", "L0_thr_Outer", "!L0_thr"], "thr-rms":["L0_thr_RMS", "!L0_thr_RMS"], "noise":["L0_noise", "!L0_noise"]}
-
 def get_data():
     data = {
         "IBL": {
@@ -26,11 +24,14 @@ def get_data():
             },
         "PIX":{
             datetime(2022,8,18):  {"L0_ToT":{"mean":17.9, "std":0.05}, "!L0_ToT":{"mean":29.8, "std":0.1}, "L0_ToTe":{"mean":0.3, "std":0.07}, "!L0_ToTe":{"mean":0.56, "std":0.08}, "L0_thr_Inner":{"mean":3478, "std":17}, "L0_thr_Outer":{"mean":4281, "std":16}, "L0_thr_RMS":{"mean":122, "std":8}, "L0_noise":{"mean":146, "std":5}, "L0_noiserms":{"mean":18, "std":2}, "!L0_thr":{"mean":3492, "std":15}, "!L0_thr_RMS":{"mean":75, "std":6}, "!L0_noise":{"mean":140, "std":7}, "!L0_noiserms":{"mean":20, "std":6}},
-            datetime(2022,7,27):  {"L0_ToT":{"mean":17.95, "std":0.04}, "!L0_ToT":{"mean":29.8, "std":0.1}, "L0_ToTe":{"mean":0.26, "std":0.06}, "!L0_ToTe":{"mean":0.5, "std":0.07}, "L0_thr_Inner":{"mean":3494, "std":29}, "L0_thr_Outer":{"mean":4290, "std":30}, "L0_thr_RMS":{"mean":173, "std":23}, "L0_noise":{"mean":188, "std":8}, "!L0_thr":{"mean":3493, "std":33}, "!L0_thr_RMS":{"mean":52.7, "std":10.2}, "!L0_noise":{"mean":138, "std":10}},
-            #datetime(2022,07,12):  {"L0_ToT":{"mean":17.95, "std":0.04}, "!L0_ToT":{"mean":29.83, "std":0.07}, "L0_ToTe":{"mean":0.24, "std":0.06}, "!L0_ToTe":{"mean":0.49, "std":0.07}, "L0_thr_Inner":{"mean":3493, "std":12}, "L0_thr_Outer":{"mean":4293, "std":9}, "L0_thr_RMS":{"mean":61.43, "std":5.82}, "L0_noise":{"mean":142.7, "std":5.4}, "!L0_thr":{"mean":3492, "std":33}, "!L0_thr_RMS":{"mean":50.5, "std":6}, "!L0_noise":{"mean":137.6, "std":9}},
-
+            datetime(2022,7,27):  {"L0_ToT":{"mean":17.95, "std":0.04}, "!L0_ToT":{"mean":29.8, "std":0.1}, "L0_ToTe":{"mean":0.26, "std":0.06}, "!L0_ToTe":{"mean":0.5, "std":0.07}, "L0_thr_Inner":{"mean":3494, "std":29}, "L0_thr_Outer":{"mean":4290, "std":30}, "L0_thr_RMS":{"mean":70.2, "std":7.5}, "L0_noise":{"mean":143, "std":5}, "!L0_thr":{"mean":3493, "std":33}, "!L0_thr_RMS":{"mean":52.7, "std":10.2}, "!L0_noise":{"mean":138, "std":10}},
+            datetime(2022,7,12):  {"L0_ToT":{"mean":17.95, "std":0.04}, "!L0_ToT":{"mean":29.83, "std":0.07}, "L0_ToTe":{"mean":0.24, "std":0.06}, "!L0_ToTe":{"mean":0.49, "std":0.07}, "L0_thr_Inner":{"mean":3493, "std":12}, "L0_thr_Outer":{"mean":4293, "std":9}, "L0_thr_RMS":{"mean":61.43, "std":5.82}, "L0_noise":{"mean":142.7, "std":5.4}, "!L0_thr":{"mean":3492, "std":33}, "!L0_thr_RMS":{"mean":50.5, "std":6}, "!L0_noise":{"mean":137.6, "std":9}},
+            #datetime(2022,7,30)
+            datetime(2022,6,7):  {"L0_ToT":{"mean":17.95, "std":0.04}, "!L0_ToT":{"mean":29.84, "std":0.07}, "L0_ToTe":{"mean":0.24, "std":0.06}, "!L0_ToTe":{"mean":0.49, "std":0.06}, "L0_thr_Inner":{"mean":3494, "std":6.8}, "L0_thr_Outer":{"mean":4292, "std":6.3}, "L0_thr_RMS":{"mean":59.42, "std":4.92}, "L0_noise":{"mean":142.6, "std":4.8}, "!L0_thr":{"mean":3492, "std":9.4}, "!L0_thr_RMS":{"mean":48.6, "std":2.9}, "!L0_noise":{"mean":137.7, "std":8}},
+            datetime(2022,5,31):  {"L0_ToT":{"mean":17.95, "std":0.08}, "!L0_ToT":{"mean":29.84, "std":0.07}, "L0_ToTe":{"mean":0.24, "std":0.06}, "!L0_ToTe":{"mean":0.49, "std":0.07}, "L0_thr_Inner":{"mean":3494, "std":6.9}, "L0_thr_Outer":{"mean":4293, "std":6.3}, "L0_thr_RMS":{"mean":59.74, "std":2.37}, "L0_noise":{"mean":142.6, "std":4.7}, "!L0_thr":{"mean":3492, "std":8}, "!L0_thr_RMS":{"mean":48.5, "std":2.8}, "!L0_noise":{"mean":137.4, "std":6.41}},
+            datetime(2022,5,25):  {"L0_ToT":{"mean":17.94, "std":0.03}, "!L0_ToT":{"mean":29.83, "std":0.11}, "L0_ToTe":{"mean":0.23, "std":0.08}, "!L0_ToTe":{"mean":0.49, "std":0.07}, "L0_thr_Inner":{"mean":3493, "std":9.4}, "L0_thr_Outer":{"mean":4292, "std":6.3}, "L0_thr_RMS":{"mean":60.45, "std":8.95}, "L0_noise":{"mean":142.5, "std":4.8}, "!L0_thr":{"mean":3493, "std":9.4}, "!L0_thr_RMS":{"mean":49.89, "std":4.65}, "!L0_noise":{"mean":137.9, "std":11.76}}, # For L0_noise, ignoring 0 noise
             
-        }  
+        }
     }
 
     # 2022, 4, 20: TOT is A021-552 (NOT A021-551 as in elog)
@@ -119,6 +120,8 @@ def plot(data, key, layer, ax):
         ax.axvline(datetime(2022, 8, 16), color='b', linestyle=(0, (1, 10)))    
         if key == "thr":
             ax.axhline(1500, color='k', linestyle='dotted')
+    elif layer == "PIX":
+        ax.axvline(datetime(2022,6,7), color='b', linestyle=(0, (1, 10)))    
         
     plt.tight_layout()
 
@@ -147,25 +150,25 @@ if __name__=="__main__":
     data = get_data()
     keys = ["thr", "tot", "tote", "thr-rms", "noise"]
 
-    # ### IBL ###
-    # #fig, axs = plt.subplots(nrows=3, ncols=2)
-    # plt.figure(figsize=(12,10))
-    # for n,k in enumerate(keys):
-    #     ax = plt.subplot(3, 2, n + 1)
-    #     plot(data, k, "IBL", ax)
-    # #lumi = get_lumi()
-    # ax = plt.subplot(3,2,6)
-    # #plot_lumi(lumi, ax)
-    # ### legend ###
-    # ax.set_axis_off()
-    # ax.text(0.1,0.6, "- Blue line dotted line represents retune")
-    # ax.text(0.1,0.5, "- Error bars represent standard deviation")
-    # ax.text(0.1,0.4, "- Data taken from elog and ConsoleApp")
-    # ######
-    # plt.savefig("IBL_monitoring_scan_trends.png")
-    # print(f"saved IBL_monitoring_scan_trends.png")
-    # plt.show()
-    # plt.close()
+    ### IBL ###
+    #fig, axs = plt.subplots(nrows=3, ncols=2)
+    plt.figure(figsize=(12,10))
+    for n,k in enumerate(keys):
+        ax = plt.subplot(3, 2, n + 1)
+        plot(data, k, "IBL", ax)
+    #lumi = get_lumi()
+    ax = plt.subplot(3,2,6)
+    #plot_lumi(lumi, ax)
+    ### legend ###
+    ax.set_axis_off()
+    ax.text(0.1,0.6, "- Blue line dotted line represents retune")
+    ax.text(0.1,0.5, "- Error bars represent standard deviation")
+    ax.text(0.1,0.4, "- Data taken from elog and ConsoleApp")
+    ######
+    plt.savefig("IBL_monitoring_scan_trends.png")
+    print(f"saved IBL_monitoring_scan_trends.png")
+    plt.show()
+    plt.close()
 
     ### PIX ###
     plt.figure(figsize=(12,10))
