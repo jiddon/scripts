@@ -93,7 +93,8 @@ def plot(data, key, layer, ax):
             yerr.append(data[layer][date][key]["std"])
         mean = np.mean(y)
         stdev =np.std(y)
-        plt.errorbar(x, y, yerr, fmt="xk", ecolor="r", capsize=2)
+        plt.errorbar(x, y, yerr, ecolor="r", color='k', capsize=2, marker='x')
+        ax.get_lines()[0].set_color("black")
     pk = keys_PIX[key]
     print(pk)
     if layer == "PIX":
