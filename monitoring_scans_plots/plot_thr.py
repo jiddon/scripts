@@ -153,18 +153,18 @@ if __name__=="__main__":
 
     ### IBL ###
     #fig, axs = plt.subplots(nrows=3, ncols=2)
-    plt.figure(figsize=(12,10))
+    plt.figure(figsize=(16,9))
     for n,k in enumerate(keys):
-        ax = plt.subplot(3, 2, n + 1)
+        ax = plt.subplot(2, 3, n + 1)
         plot(data, k, "IBL", ax)
     #lumi = get_lumi()
-    ax = plt.subplot(3,2,6)
+    ax = plt.subplot(2,3,6)
     #plot_lumi(lumi, ax)
     ### legend ###
     ax.set_axis_off()
-    ax.text(0.1,0.6, "- Blue line dotted line represents retune")
-    ax.text(0.1,0.5, "- Error bars represent standard deviation")
-    ax.text(0.1,0.4, "- Data taken from elog and ConsoleApp")
+    ax.text(0.,0.6, "- Blue line dotted line represents retune", fontsize=14)
+    ax.text(0.,0.5, "- Error bars represent standard deviation", fontsize=14)
+    ax.text(0.,0.4, "- Data taken from elog and ConsoleApp", fontsize=14)
     ######
     plt.savefig("IBL_monitoring_scan_trends.png")
     print(f"saved IBL_monitoring_scan_trends.png")
@@ -172,18 +172,18 @@ if __name__=="__main__":
     plt.close()
 
     ### PIX ###
-    plt.figure(figsize=(12,10))
+    plt.figure(figsize=(16,9))
     for n,k in enumerate(keys):
-        ax = plt.subplot(3, 2, n + 1)
+        ax = plt.subplot(2, 3, n + 1)
         plot(data, k, "PIX", ax)
     #lumi = get_lumi()
-    ax = plt.subplot(3,2,6)
+    ax = plt.subplot(2,3,6)
     #plot_lumi(lumi, ax)
     ### legend ###
     ax.set_axis_off()
-    ax.text(0.1,0.6, "- Blue line dotted line represents retune")
-    ax.text(0.1,0.5, "- Error bars represent standard deviation")
-    ax.text(0.1,0.4, "- Data taken from elog and ConsoleApp")
+    ax.text(0.,0.6, "- Blue line dotted line represents retune", fontsize=14)
+    ax.text(0.,0.5, "- Error bars represent standard deviation", fontsize=14)
+    ax.text(0.,0.4, "- Data taken from elog and ConsoleApp", fontsize=14)
     ######
     plt.savefig("PIX_monitoring_scan_trends.png")
     print(f"saved PIX_monitoring_scan_trends.png")
