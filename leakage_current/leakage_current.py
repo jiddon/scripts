@@ -95,8 +95,7 @@ if __name__=="__main__":
     lumi_map = {}
     for n,i in enumerate(weeks):
         lumi_map[i] = lumis[n]
-    print(lumi_map)
-    
+
     data = read_to_dict("ibl_high_leakage.txt")
     dfs = []
     rods = []
@@ -110,25 +109,25 @@ if __name__=="__main__":
         dfs.append(df)
         rods.append(k)
 
-    # # per day
-    # plt.figure(figsize=(16,9))
-    # for n,df in enumerate(dfs):
-    #     ax = plt.subplot(2, 2, n+1)
-    #     ax.title.set_text(rods[n])
-    #     ax = sns.boxplot(x="day", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
-    #     n = 7  # Keeps every 7th label
-    #     [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
-    #     plt.tight_layout()
-    #     plt.savefig("HV_I_per_day.png")
+    # per day
+    plt.figure(figsize=(16,9))
+    for n,df in enumerate(dfs):
+        ax = plt.subplot(2, 2, n+1)
+        ax.title.set_text(rods[n])
+        ax = sns.boxplot(x="day", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
+        n = 7  # Keeps every 7th label
+        [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+        plt.tight_layout()
+        plt.savefig("HV_I_per_day.png")
 
-    # # per week
-    # plt.figure(figsize=(16,9))
-    # for n,df in enumerate(dfs):
-    #     ax = plt.subplot(2, 2, n+1)
-    #     ax.title.set_text(rods[n])
-    #     ax = sns.boxplot(x="week", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
-    #     plt.tight_layout()
-    #     plt.savefig("HV_I_per_week.png")
+    # per week
+    plt.figure(figsize=(16,9))
+    for n,df in enumerate(dfs):
+        ax = plt.subplot(2, 2, n+1)
+        ax.title.set_text(rods[n])
+        ax = sns.boxplot(x="week", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
+        plt.tight_layout()
+        plt.savefig("HV_I_per_week.png")
 
     # per weekly integrated lumi
     plt.figure(figsize=(16,9))
