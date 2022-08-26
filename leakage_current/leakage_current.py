@@ -3,6 +3,8 @@ import matplotlib.dates
 import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
+import seaborn as sns
+import matplotlib.ticker as ticker
 from datetime import datetime
 
 def get_lumi():
@@ -35,18 +37,18 @@ def get_lumi():
         [datetime(2022, 4, 4), 0],
         [datetime(2022, 3, 28), 0],
         ]
-    ti_lumi_fb = {"date":[], "lumi":[]} # total integrated lumi fb
+    ti_lumi_fb = {"date":[], "integrated lumi ($fb^{-1}$)":[]} # total integrated lumi fb
     ti_lumi_list = []
     lumi_fb.reverse()
     for n,i in enumerate(lumi_fb):
         if n == 0:
             ti_lumi_fb["date"].append(i[0])
-            ti_lumi_fb["lumi"].append(i[-1])
+            ti_lumi_fb["integrated lumi ($fb^{-1}$)"].append(i[-1])
             ti_lumi_list.append(i[-1])
         else:
             #ti_lumi_fb[i[0]] = i[-1] + ti_lumi_list[-1]
             ti_lumi_fb["date"].append(i[0])
-            ti_lumi_fb["lumi"].append(i[-1] + ti_lumi_list[-1])
+            ti_lumi_fb["integrated lumi ($fb^{-1}$)"].append(i[-1] + ti_lumi_list[-1])
             ti_lumi_list.append(i[-1] + ti_lumi_list[-1])
     return ti_lumi_fb
 
@@ -60,7 +62,7 @@ def read_to_dict(filename):
                 rodname = line[rodname_start:].strip()
                 print(f"found rod: {rodname}")
                 assert rodname
-                data[rodname] = {"date":[], "value":[]}
+                data[rodname] = {"date":[], "HV_I (mA)":[]}
             else:
                 cols = line.split()
                 date_ = cols[0].split(".")
@@ -68,9 +70,19 @@ def read_to_dict(filename):
                 time = cols[1]
                 value = float(cols[2])
                 data[rodname]["date"].append(date)
-                data[rodname]["value"].append(value)
+                data[rodname]["HV_I (mA)"].append(value)
     return data   
-    
+
+def fmt(s):
+    try:
+        if float(s) > 0.1:
+            n = "{:.2f}".format(float(s))
+        else:
+            n = "{:.2e}".format(float(s))
+    except:
+        n = ""
+    return n
+
 
 if __name__=="__main__":
     lumi = get_lumi()
@@ -79,7 +91,7 @@ if __name__=="__main__":
     df_lumi_date = df_lumi["date"].dt.isocalendar()
     df_lumi["week"] = df_lumi_date["week"]
     weeks = df_lumi["week"].values
-    lumis = df_lumi["lumi"].values
+    lumis = df_lumi["integrated lumi ($fb^{-1}$)"].values
     lumi_map = {}
     for n,i in enumerate(weeks):
         lumi_map[i] = lumis[n]
@@ -94,15 +106,43 @@ if __name__=="__main__":
         df_date = df["date"].dt.isocalendar()
         df["week"] = df_date["week"]
         df["day"] = df_date["day"]+ (7*df_date["week"])
-        df["lumi"] = df["week"].map(lumi_map)
+        df["integrated lumi ($fb^{-1}$)"] = df["week"].map(lumi_map)
         dfs.append(df)
         rods.append(k)
-        print(df)
 
+    # # per day
+    # plt.figure(figsize=(16,9))
+    # for n,df in enumerate(dfs):
+    #     ax = plt.subplot(2, 2, n+1)
+    #     ax.title.set_text(rods[n])
+    #     ax = sns.boxplot(x="day", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
+    #     n = 7  # Keeps every 7th label
+    #     [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+    #     plt.tight_layout()
+    #     plt.savefig("HV_I_per_day.png")
+
+    # # per week
+    # plt.figure(figsize=(16,9))
+    # for n,df in enumerate(dfs):
+    #     ax = plt.subplot(2, 2, n+1)
+    #     ax.title.set_text(rods[n])
+    #     ax = sns.boxplot(x="week", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
+    #     plt.tight_layout()
+    #     plt.savefig("HV_I_per_week.png")
+
+    # per weekly integrated lumi
     plt.figure(figsize=(16,9))
     for n,df in enumerate(dfs):
-        ax = plt.subplot(2, 2, n+1)        
-        #df.plot.scatter("day", "value", )
-        plt.scatter(df["day"], df["value"], s=0.2, color='k', marker='.')
+        ax = plt.subplot(2, 2, n+1)
+        ax.title.set_text(rods[n])
+        ax = sns.boxplot(x="integrated lumi ($fb^{-1}$)", y="HV_I (mA)", data=df, showfliers=False, fliersize=0.2, meanline=True)
+
+        ax.set_xticklabels([fmt(label.get_text()) for label in ax.get_xticklabels()])
+
+        plt.xticks(rotation=45)
+    
+        plt.tight_layout()
+        plt.savefig("HV_I_per_weekly_lumi.png")
     plt.show()
+
 
