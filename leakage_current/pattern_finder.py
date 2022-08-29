@@ -12,6 +12,7 @@ import seaborn_subplots as sfg
 import scipy.stats as stats
 from functools import reduce
 from os.path import exists
+from split_files import split_files
 
 def p2f(x):
     return float(x.strip('%'))/100
@@ -25,12 +26,12 @@ def hv_round(x):
     return round(float(x),2)
 
 def get_lumi_daily():
-    df = pd.read_csv('daytable.csv', encoding="utf-8", skipinitialspace=True, converters={'LStableRecPercent':p2f, 'LReadyRecPercent':p2f, 'AvgMu':mu_round, 'PeakMu':mu_round})
+    df = pd.read_csv('./lumi_files/daytable.csv', encoding="utf-8", skipinitialspace=True, converters={'LStableRecPercent':p2f, 'LReadyRecPercent':p2f, 'AvgMu':mu_round, 'PeakMu':mu_round})
     df = df.rename(columns=lambda x: x.strip())
     return df
 
 def get_rod_data(name, meas):
-    df = pd.read_csv(name+'_'+meas+'.csv', names=["Day", "Time", meas], converters={meas:hv_round})
+    df = pd.read_csv('./dcs_csv/'+name+'_'+meas+'.csv', names=["Day", "Time", meas], converters={meas:hv_round})
     return df
 
 def plot_correlations(corr_dict, obs, df, rodname):
@@ -78,12 +79,12 @@ def get_dfs(rod, obs):
     data_frames = []
     data_frames.append(get_lumi_daily())
     for ob in obs:
-        f = str(rod)+'_'+str(ob)+'.csv'
+        f = './dcs_csv/'+str(rod)+'_'+str(ob)+'.csv'
         if exists(f):
             data_frames.append(get_rod_data(rod, ob))
         else:
             msg = f"File {f} does not exist!"
-            raise ValueError(msg)
+            raise FileNotFoundError(msg)
         
     df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Day'],
                                                     how='inner'), data_frames)
@@ -110,7 +111,6 @@ class ci_functions():
         e.g. find_corr --rod LI_S01_C_M4 --obs HV_IMeas
         e.g. find_corr LI_S01_C_M4 HV_IMeas TModule
         """
-
         df = get_dfs(rod, obs)
         columns = df.columns.values.tolist()
         clean_columns(columns)
@@ -145,6 +145,32 @@ class ci_functions():
         print(f"./plots/corr/{rod}.png saved")
         plt.close()
 
+    def find_dcs_corr(self, filename, plot=True, corr_cut=0.7, verbose=False):
+        """
+        Plot correlation plots for single DCS raw file.
+        """
+        file_path = "./dcs_raw/"+filename
+        if exists(file_path):
+            paths = split_files(file_path)
+            rods_obs = {}
+            for p in paths:
+                rod_start = p.find("dcs_csv/") + 8
+                rod_end = rod_start + 11
+                rod = p[rod_start:rod_end]
+                obs_start = rod_end + 1
+                obs_end = p.find(".csv")
+                obs = p[obs_start:obs_end]
+                if rod not in rods_obs.keys():
+                    rods_obs[rod] = [obs]
+                else:
+                    rods_obs[rod].append(obs)
+            for rod in rods_obs.keys():
+                print(f"\nRod {rod}:")
+                self.find_corr(rod, *rods_obs[rod], plot=plot, corr_cut=corr_cut, verbose=verbose)
+        else:
+            msg = f"File {file_path} does not exist!"
+            raise FileNotFoundError(msg)
+                
         
 if __name__=="__main__":
     fire.Fire(ci_functions)
