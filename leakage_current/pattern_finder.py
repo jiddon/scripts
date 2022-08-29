@@ -28,11 +28,13 @@ def get_lumi_daily():
     return df
 
 def get_rod_data(name):
-    df = pd.read_csv(name+'_HV_IMeas.csv', names=["Day", "Time", "HV_IMeas (mA)"], converters={'HV_IMeas (mA)':hv_round})
+    df = pd.read_csv(name+'_HV_IMeas.csv', names=["Day", "Time", "HV_IMeas-mA"], converters={'HV_IMeas-mA':hv_round})
     return df
 
 if __name__=="__main__":
-    CORR_CUT = 0.5
+    PLOT = True # want to see plots? 
+    CORR_CUT = 0.8 # correlation coefficient cut. above this, we are interested
+    OBSERVABLES = ['HV_IMeas-mA'] # for which observables do we want to see the results
     
     df = get_lumi_daily()
     dfs = []
@@ -42,20 +44,42 @@ if __name__=="__main__":
         dfm = pd.merge(df, dfr, on='Day')
         dfs.append(dfm)
     print(df.columns)
-    columns = df.columns.values.tolist()
+    columns = dfm.columns.values.tolist()
     columns.remove('Fills')
+    columns.remove('Time')
 
     # correlation matrix
-    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    corr_dict = {col:None for col in columns}
     for n,df in enumerate(dfs):
         corr = df.corr()
         print(f"\nCorrelation for {rods[n]}:")
         print(corr)
         for col in columns:
-            print("\n---------------------------------")
-            print(col)
-            print("---------------------------------")
-            df_corr = corr.loc[corr[col] > CORR_CUT]
-            print(df_corr[col].sort_values(ascending=False))
+            if col in OBSERVABLES:
+                print("\n---------------------------------")
+                print(col)
+                print("---------------------------------")
+                df_corr = corr.loc[corr[col] > CORR_CUT]
+                print(df_corr[col].sort_values(ascending=False))
+                corr_dict[col] = df_corr[col].index.tolist()
+                corr_dict[col].remove(col)
+        if PLOT:
+            for k in corr_dict.keys():
+                if k in OBSERVABLES:
+                    for i in corr_dict[k]:
+                        plt.figure(figsize=(16,9))
+                        ax = plt.subplot()
+                        ax.title.set_text(rods[n])
+                        ax = sns.boxplot(x=i, y=k, data=df, showfliers=False, fliersize=0.2, meanline=True)
+                        r, p = stats.pearsonr(df[i], df[k])
+                        plt.tight_layout()
+                        ax.annotate(f'$\\rho = {r:.3f}$',
+                                    xy=(0.1, 0.9), xycoords='axes fraction',
+                                    ha='left', va='center',
+                                    bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
+                        plt.savefig("./plots/correlations/"+k+"_vs_"+i+".png")
+                        print(f"./plots/correlations/"+k+"_vs_"+i+".png")
+                        plt.close()
+
 
 
