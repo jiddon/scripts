@@ -1,13 +1,13 @@
+import csv
+import fire
+import matplotlib.dates
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import matplotlib.dates
 import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 import seaborn as sns; sns.set()
 import matplotlib.ticker as ticker
-import csv
-import fire
 import seaborn_subplots as sfg
 import scipy.stats as stats
 from functools import reduce
