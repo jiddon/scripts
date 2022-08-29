@@ -11,7 +11,7 @@ import fire
 import seaborn_subplots as sfg
 import scipy.stats as stats
 from functools import reduce
-from functools import reduce
+from os.path import exists
 
 def p2f(x):
     return float(x.strip('%'))/100
@@ -33,12 +33,12 @@ def get_rod_data(name, meas):
     df = pd.read_csv(name+'_'+meas+'.csv', names=["Day", "Time", meas], converters={meas:hv_round})
     return df
 
-def plot_correlations(corr_dict, OBSERVABLES, df, rodname):
+def plot_correlations(corr_dict, obs, df, rodname):
     """
     Plot boxplot for OBSERVABLES whose correlation coefficient exceeds CORR_CUT.
     """
     for k in corr_dict.keys():
-        if k in OBSERVABLES:
+        if k in obs:
             for i in corr_dict[k]:
                 plt.figure(figsize=(16,9))
                 ax = plt.subplot()
@@ -54,7 +54,7 @@ def plot_correlations(corr_dict, OBSERVABLES, df, rodname):
                 print(f"./plots/correlations/"+rodname+"_"+k+"_vs_"+i+".png")
                 plt.close()
 
-def get_corr_dict(df, columns, OBSERVABLES, CORR_CUT):
+def get_corr_dict(df, columns, obs, corr_cut):
     """
     Print correlation matrix for OBSERVABLES whose correlation coefficient exceeds CORR_CUT.
     Returns corr_dict, a dict with key OBSERVABLES and value of list containing names of 
@@ -63,45 +63,88 @@ def get_corr_dict(df, columns, OBSERVABLES, CORR_CUT):
     corr_dict = {col:None for col in columns}
     corr = df.corr()
     for col in columns:
-        if col in OBSERVABLES:
+        if col in obs:
             print("\n---------------------------------")
             print(col)
             print("---------------------------------")
-            df_corr = corr.loc[corr[col] > CORR_CUT]
+            df_corr = corr.loc[corr[col] > corr_cut]
             print(corr[col].sort_values(ascending=False))
             corr_dict[col] = df_corr[col].index.tolist()
             corr_dict[col].remove(col)
     return corr_dict
 
-def find_corr(rod, obs, plot=True, corr_cut=0.7, verbose=False):
-    """
-    Calculate correlation coefficients for specified observable.
-    Rod name and observable of interest are required arguments.
-    e.g. --rod LI_S01_C_M4 --obs HV_IMeas
-    """
-    PLOT = plot # want to see plots? 
-    CORR_CUT = corr_cut # correlation coefficient cut. above this, we are interested
-    OBSERVABLES = obs # for which observables do we want to see the results?
-    
+
+def get_dfs(rod, obs):
     data_frames = []
     data_frames.append(get_lumi_daily())
-    data_frames.append(get_rod_data(rod, 'HV_IMeas'))
-    data_frames.append(get_rod_data(rod, 'TModule'))
+    for ob in obs:
+        f = str(rod)+'_'+str(ob)+'.csv'
+        if exists(f):
+            data_frames.append(get_rod_data(rod, ob))
+        else:
+            msg = f"File {f} does not exist!"
+            raise ValueError(msg)
+        
     df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Day'],
                                                     how='inner'), data_frames)
-    if verbose:
-        print(df_merged)
+    return df_merged
+
+
+def clean_columns(columns):
+    if 'Fills' in columns:
+        columns.remove('Fills')
+    if 'Time' in columns:
+        columns.remove('Time')
+    if 'Time_x' in columns:
+        columns.remove('Time_x')
+    if 'Time_y' in columns:
+        columns.remove('Time_y')
+
+
+class ci_functions():
+
+    def find_corr(self, rod, *obs, plot=True, corr_cut=0.7, verbose=False):
+        """
+        Calculate correlation coefficients for specified observable.
+        Rod name and observable of interest are required arguments.
+        e.g. find_corr --rod LI_S01_C_M4 --obs HV_IMeas
+        e.g. find_corr LI_S01_C_M4 HV_IMeas TModule
+        """
+
+        df = get_dfs(rod, obs)
+        columns = df.columns.values.tolist()
+        clean_columns(columns)
+        if verbose:
+            print(df)
         
-    columns = df_merged.columns.values.tolist()
-    columns.remove('Fills')
-    columns.remove('Time_x')
-    columns.remove('Time_y')
+        # correlation matrix
+        corr_dict = get_corr_dict(df, columns, obs, corr_cut)
+        if verbose:
+            print(corr_dict)
 
-    # correlation matrix
-    corr_dict = get_corr_dict(df_merged, columns, OBSERVABLES, CORR_CUT)
-    if PLOT:
-        plot_correlations(corr_dict, OBSERVABLES, df_merged, rod)
+        if plot:
+            plot_correlations(corr_dict, obs, df, rod)
 
+            
+    def correlation_matrix(self, rod, *obs):
+        """
+        Plot correlation matrix.
+        """
+        df = get_dfs(rod, obs)
+        cmap = sns.diverging_palette(230, 20, as_cmap=True)
+        plt.figure(figsize=(16,9))
+        ax = plt.subplot()
+        ax.title.set_text(rod)
+        corr = df.corr()
+        print(f"\nCorrelation for {rod}:")
+        sns.heatmap(corr, cmap=cmap, square=True, annot=True)
+        bottom, top = ax.get_ylim()
+        ax.set_ylim(bottom + 0.5, top - 0.5)
+        plt.tight_layout()
+        plt.savefig("./plots/corr/"+rod+".png")
+        print(f"./plots/corr/{rod}.png saved")
+        plt.close()
 
+        
 if __name__=="__main__":
-    fire.Fire(find_corr)
+    fire.Fire(ci_functions)
