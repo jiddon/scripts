@@ -6,10 +6,11 @@ import pandas as pd
 import matplotlib.dates as mdates
 import seaborn as sns; sns.set()
 import matplotlib.ticker as ticker
-from datetime import datetime
 import csv
 import seaborn_subplots as sfg
 import scipy.stats as stats
+from functools import reduce
+from functools import reduce
 
 def p2f(x):
     return float(x.strip('%'))/100
@@ -27,11 +28,14 @@ def get_lumi_daily():
     df = df.rename(columns=lambda x: x.strip())
     return df
 
-def get_rod_data(name):
-    df = pd.read_csv(name+'_HV_IMeas.csv', names=["Day", "Time", "HV_IMeas-mA"], converters={'HV_IMeas-mA':hv_round})
+def get_rod_data(name, meas):
+    df = pd.read_csv(name+'_'+meas+'.csv', names=["Day", "Time", meas], converters={meas:hv_round})
     return df
 
-def plot_correlations(corr_dict, OBSERVABLES, df):
+def plot_correlations(corr_dict, OBSERVABLES, df, rodname):
+    """
+    Plot boxplot for OBSERVABLES whose correlation coefficient exceeds CORR_CUT.
+    """
     for k in corr_dict.keys():
         if k in OBSERVABLES:
             for i in corr_dict[k]:
@@ -45,44 +49,57 @@ def plot_correlations(corr_dict, OBSERVABLES, df):
                             xy=(0.1, 0.9), xycoords='axes fraction',
                             ha='left', va='center',
                             bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
-                plt.savefig("./plots/correlations/"+k+"_vs_"+i+".png")
-                print(f"./plots/correlations/"+k+"_vs_"+i+".png")
+                plt.savefig("./plots/correlations/"+rodname+"_"+k+"_vs_"+i+".png")
+                print(f"./plots/correlations/"+rodname+"_"+k+"_vs_"+i+".png")
                 plt.close()
+
+def get_corr_dict(df, columns, OBSERVABLES):
+    """
+    Print correlation matrix for OBSERVABLES whose correlation coefficient exceeds CORR_CUT.
+    Returns corr_dict, a dict with key OBSERVABLES and value of list containing names of 
+    correlations greater than CORR_CUT. 
+    """
+    corr_dict = {col:None for col in columns}
+    corr = df.corr()
+    print(f"\nCorrelation for {rods[n]}:")
+    for col in columns:
+        if col in OBSERVABLES:
+            print("\n---------------------------------")
+            print(col)
+            print("---------------------------------")
+            df_corr = corr.loc[corr[col] > CORR_CUT]
+            print(corr[col].sort_values(ascending=False))
+            corr_dict[col] = df_corr[col].index.tolist()
+            corr_dict[col].remove(col)
+    return corr_dict
 
 
 if __name__=="__main__":
     PLOT = True # want to see plots? 
-    CORR_CUT = 0.8 # correlation coefficient cut. above this, we are interested
-    OBSERVABLES = ['HV_IMeas-mA'] # for which observables do we want to see the results
+    CORR_CUT = 0.7 # correlation coefficient cut. above this, we are interested
+    OBSERVABLES = ['HV_IMeas', 'TModule'] # for which observables do we want to see the results?
     
     df = get_lumi_daily()
     dfs = []
-    rods = ["LI_S05_C_M4"]#, "LI_S01_C_M4", "LI_S11_A_M4", "LI_S13_C_M4"]
+    rods = ["LI_S11_A_M4"]#["LI_S05_C_M4", "LI_S11_A_M4", "LI_S13_C_M4"]# "LI_S01_C_M4"]
     for rod in rods:
-        dfr = get_rod_data(rod)
-        dfm = pd.merge(df, dfr, on='Day')
-        dfs.append(dfm)
-    print(df.columns)
-    columns = dfm.columns.values.tolist()
+        data_frames = []
+        data_frames.append(df)
+        data_frames.append(get_rod_data(rod, 'HV_IMeas'))
+        data_frames.append(get_rod_data(rod, 'TModule'))
+        df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Day'],
+                                                        how='inner'), data_frames)
+        dfs.append(df_merged)
+        
+    columns = df_merged.columns.values.tolist()
     columns.remove('Fills')
-    columns.remove('Time')
+    columns.remove('Time_x')
+    columns.remove('Time_y')
 
     # correlation matrix
-    corr_dict = {col:None for col in columns}
     for n,df in enumerate(dfs):
-        corr = df.corr()
-        print(f"\nCorrelation for {rods[n]}:")
-        print(corr)
-        for col in columns:
-            if col in OBSERVABLES:
-                print("\n---------------------------------")
-                print(col)
-                print("---------------------------------")
-                df_corr = corr.loc[corr[col] > CORR_CUT]
-                print(df_corr[col].sort_values(ascending=False))
-                corr_dict[col] = df_corr[col].index.tolist()
-                corr_dict[col].remove(col)
+        corr_dict = get_corr_dict(df, columns, OBSERVABLES)
         if PLOT:
-            plot_correlations(corr_dict, OBSERVABLES, df)
+            plot_correlations(corr_dict, OBSERVABLES, df, rods[n])
 
 
