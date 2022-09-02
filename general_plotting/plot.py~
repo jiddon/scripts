@@ -1,0 +1,30 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import fire
+
+def read_csv(filename):
+    """
+    Read nicely formatted csv into pandas dataframe.
+    """
+    return pd.read_csv(filename)
+
+class Plots():
+
+    def __init__(filename):
+        self.df = read_csv(filename)
+
+    def scatter(self, x, y):
+        """
+        Plot scatter
+        """
+        plt.figure(figsize=(16,9))
+        ax = plt.subplot()
+        p = self.df.plot.scatter(x,y)
+        plt.tight_layout()        
+
+
+if __init__="__main__":
+    filename = input("Enter the path to your nicely formatted csv:")
+    df = read_csv(filename)
+    
