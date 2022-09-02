@@ -79,6 +79,14 @@ class Plots(object):
                            bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
         plt.show()
 
+    def pairplot(self):
+        """
+        Pair plot.
+        """
+        sns.set_theme(style="ticks")
+        sns.pairplot(self._df)
+        plt.show()
+
 
 if __name__=="__main__":
     fire.Fire(Plots)
