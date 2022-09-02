@@ -9,8 +9,9 @@ def read_csv(filename):
     """
     Read nicely formatted csv into pandas dataframe.
     """
-    print(pd.read_csv(filename))
-    return pd.read_csv(filename)
+    df = pd.read_csv(filename)
+    print(df)
+    return df
 
 class Plots(object):
     """
@@ -29,6 +30,13 @@ class Plots(object):
             header.replace("'", "")
             print(f"    {header}")
 
+    def hist(self, x, bins):
+        """
+        Histogram.
+        """
+        self._df.hist(column=x, bins=bins)
+        plt.show()
+        
     def scatter(self, x, y):
         """
         Plot scatter.
