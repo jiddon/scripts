@@ -1,0 +1,27 @@
+[1mNAME[0m
+    pattern_finder.py --rod LI_S05_C_M4
+
+[1mSYNOPSIS[0m
+    pattern_finder.py --rod LI_S05_C_M4 - [4mGROUP[0m | [4mCOMMAND[0m | [4mVALUE[0m
+
+[1mGROUPS[0m
+    [1m[4mGROUP[0m[0m is one of the following:
+
+     df
+       Two-dimensional, size-mutable, potentially heterogeneous tabular data.
+
+     obs
+
+[1mCOMMANDS[0m
+    [1m[4mCOMMAND[0m[0m is one of the following:
+
+     correlation_matrix
+       Plot correlation matrix.
+
+     find_corr
+       Calculate correlation coefficients for specified observable. Rod name and observable of interest are required arguments. e.g. find_corr --rod LI_S01_C_M4 --obs HV_IMeas e.g. find_corr LI_S01_C_M4 HV_IMeas TModule
+
+[1mVALUES[0m
+    [1m[4mVALUE[0m[0m is one of the following:
+
+     rod

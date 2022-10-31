@@ -31,7 +31,11 @@ def get_lumi_daily():
     return df
 
 def get_rod_data(name, meas):
-    df = pd.read_csv('./dcs_csv/'+name+'_'+meas+'.csv', names=["Day", "Time", meas], converters={meas:hv_round})
+    df = pd.read_csv('./dcs_csv/'+name+'_'+meas+'.csv', names=["Day", meas], converters={meas:hv_round})
+    return df
+
+def read_csv_to_df(path):
+    df = pd.read_csv(path, names=["Day", path])
     return df
 
 def plot_correlations(corr_dict, obs, df, rodname):
@@ -79,15 +83,35 @@ def get_dfs(rod, obs):
     data_frames = []
     data_frames.append(get_lumi_daily())
     for ob in obs:
-        f = './dcs_csv/'+str(rod)+'_'+str(ob)+'.csv'
-        if exists(f):
-            data_frames.append(get_rod_data(rod, ob))
-        else:
-            msg = f"File {f} does not exist!"
-            raise FileNotFoundError(msg)
+        if ob not in ['HV_IMeas']:
+            f = './dcs_csv/'+str(rod)+'_'+str(ob)+'.csv'
+            if exists(f):
+                data_frames.append(get_rod_data(rod, ob))
+            else:
+                msg = f"File {f} does not exist!"
+                raise FileNotFoundError(msg)
         
     df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Day'],
                                                     how='inner'), data_frames)
+    return df_merged
+
+def get_dfs_from_paths(paths):
+    #data_frames = []
+    #data_frames.append(get_lumi_daily())
+    df = get_lumi_daily()
+    for p in paths:
+        print(p)
+        if 'HV_IMeas' not in p:
+            if exists(p):
+                #data_frames.append(read_csv_to_df(p))
+                dfi = read_csv_to_df(p)
+                df = pd.merge(df,dfi,on=['Day'],how='inner', copy=False)
+            else:
+                msg = f"File {f} does not exist!"
+                raise FileNotFoundError(msg)
+            
+        #df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Day'],
+        #how='inner'), data_frames)
     return df_merged
 
 
@@ -104,14 +128,17 @@ def clean_columns(columns):
 
 class ci_functions():
 
-    def find_corr(self, rod, *obs, plot=True, corr_cut=0.7, verbose=False):
+    def find_corr(self, rod, *obs, plot=True, corr_cut=0.7, verbose=False, from_paths=None):
         """
         Calculate correlation coefficients for specified observable.
         Rod name and observable of interest are required arguments.
         e.g. find_corr --rod LI_S01_C_M4 --obs HV_IMeas
         e.g. find_corr LI_S01_C_M4 HV_IMeas TModule
         """
-        df = get_dfs(rod, obs)
+        if not from_paths:
+            df = get_dfs(rod, obs)
+        else:
+            df = get_dfs_from_paths(from_paths)
         columns = df.columns.values.tolist()
         clean_columns(columns)
         if verbose:
@@ -145,11 +172,12 @@ class ci_functions():
         print(f"./plots/corr/{rod}.png saved")
         plt.close()
 
-    def find_dcs_corr(self, filename, plot=True, corr_cut=0.7, verbose=False):
+        
+    def find_dcs_corr(self, filename, plot=True, corr_cut=0.7, verbose=False, matrix=False, from_path=None):
         """
         Plot correlation plots for single DCS raw file.
         """
-        file_path = "./dcs_raw/"+filename
+        file_path = filename
         if exists(file_path):
             paths = split_files(file_path)
             rods_obs = {}
@@ -166,7 +194,11 @@ class ci_functions():
                     rods_obs[rod].append(obs)
             for rod in rods_obs.keys():
                 print(f"\nRod {rod}:")
-                self.find_corr(rod, *rods_obs[rod], plot=plot, corr_cut=corr_cut, verbose=verbose)
+                if not from_path:
+                    self.find_corr(rod, *rods_obs[rod], plot=plot, corr_cut=corr_cut, verbose=verbose)
+                else:
+                    self.find_corr(rod, *rods_obs[rod], plot=plot, corr_cut=corr_cut, verbose=verbose, from_paths=paths)
+                    
         else:
             msg = f"File {file_path} does not exist!"
             raise FileNotFoundError(msg)
