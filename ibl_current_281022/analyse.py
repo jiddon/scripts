@@ -6,6 +6,7 @@ from functools import reduce
 from datetime import datetime
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import seaborn as sns
 import os
 
 def normalise(dfo, col):
@@ -76,6 +77,8 @@ def llines(df, x, value):
 def get_df_hv_on(_df):
     hv = pd.read_csv('hv.csv', names=["time", "hv"],  parse_dates=['time'])
     hv['hv'] = np.where(hv['hv'] > 449, 1, 0) # 1 is HV on
+
+    #_df.drop(_df[_df['value'] < 1.5].index, inplace=True) # require current to be greater than cut
     
     _df.sort_values(by="time", inplace=True, ignore_index=True)
     hv.sort_values(by="time", inplace=True, ignore_index=True)
@@ -108,23 +111,55 @@ def lllines(df_hvon, value):
     fig.write_html(value+".html")
     fig.show()
 
-def plot_mean(df_hvon):
+def plot_box(df_hvon):
+    """ mean of each day """
     mods = list(set(df_hvon['mod'].to_list()))
     dfm = pd.DataFrame()
+    dfdm = pd.DataFrame()
     for n,mod in enumerate(mods):
         df = df_hvon[df_hvon['mod'] == mod]
-        dft = df.groupby(df["time"].dt.date)["value"].max()
+        #dft = df.groupby(df["time"].dt.datetime)["value"].max()
+        dft = df.groupby(df["time"].dt.strftime("%Y-%m-%d %H"))["value"].max() # every hour
         dft = dft.reset_index()
+        
+        dfd = df.groupby(df["time"].dt.strftime("%Y-%m-%d"))["value"].max() # every day
+        dfd = dfd.reset_index()
         if n == 0:
             dfm = dft
+            dfdm = dfd
         else:
             dfm = dfm.append(dft)
+            dfdm = dfdm.append(dfd)
+
+    dfm['time'] = pd.to_datetime(dfm['time'])
+    dfdm['time'] = pd.to_datetime(dfdm['time'])
+    
     dfm = dfm.sort_values(by='time')
-    print(dfm)
-    dfmm = dfm.groupby(dfm["time"].dt.date)["value"].mean()
-    dfmm.plot(x='time', y='value')
+    dfdm = dfdm.sort_values(by='time')
+    
+    dfmm = dfm.groupby('time').mean()
+    dfmm = dfmm.reset_index()
+  
+    dfdmm = dfdm.groupby('time').mean()
+    dfdmm = dfdmm.reset_index()
+    
+    #sns.boxplot(data=dfm, x="time", y="value", meanline=True)
+    sns.scatterplot(data=dfm, x="time", y="value", s=2, alpha=0.1)
+  
+    #sns.scatterplot(data=dfdmm, x="time", y="value", s=3, color='k')
+
+    badtime = ["2022-08-18", "2022-10-06", "2022-10-17", "2022-10-18", "2022-10-19"]
+    dfdmm = dfdmm[~dfdmm['time'].isin(badtime)]
+    plt.plot(dfdmm['time'], dfdmm['value'], color='k')
+    
+    plt.ylim(1.0, 2.4)
     plt.show()
-    return dfmm
+
+    plt.scatter(dfdmm['time'], dfdmm['value'], color='k')
+    plt.ylim(1.75, 2)
+    plt.show()
+    return dfdmm
+
 
 def kde(df):
     fig, axes = plt.subplots(figsize=(10,10))#, sharey=True)
@@ -139,7 +174,7 @@ if __name__=="__main__":
     dfo = get_dfs_from_paths('dcs_csv')
     df = get_df_hv_on(dfo)
     #lllines(df, 'value')
-    plot_mean(df)
+    dfdm = plot_box(df) # df daily mean
     
     #kde(df)
     
