@@ -7,6 +7,7 @@ import matplotlib.dates as mdates
 def get_data():
     data = {
         "IBL": {
+            datetime(2022,9, 15):  {"thr":{"mean":1460, "std":35}, "tot":{"mean":10.95, "std":0.12}, "tote":{"mean":0.7, "std":0.06}, "thr-rms":{"mean":106.4, "std":12.8}, "noise":{"mean":148.5, "std":13.2}},            
             datetime(2022,8,18):  {"thr":{"mean":1508, "std":20}, "tot":{"mean":10.2, "std":0.06}, "tote":{"mean":0.4, "std":0.04}, "thr-rms":{"mean":86, "std":10}, "noise":{"mean":150, "std":13}},            
             datetime(2022,8,16):  {"thr":{"mean":1509, "std":9}, "tot":{"mean":10.1, "std":0.02}, "tote":{"mean":0.3, "std":0.03}, "thr-rms":{"mean":79.2, "std":10.3}, "noise":{"mean":149.9, "std":14.2}},            
             datetime(2022,8,15):  {"thr":{"mean":1404, "std":76}, "tot":{"mean":9.93, "std":0.28}, "tote":{"mean":0.81, "std":0.16}, "thr-rms":{"mean":126, "std":20}, "noise":{"mean":155, "std":15}},
