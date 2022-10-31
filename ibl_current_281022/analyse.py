@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
+def get_lumi_daily():
+    """
+    get lumi per day
+    """
+
 def normalise(dfo, col):
     result = pd.DataFrame()
     mods = list(set(dfo['mod'].to_list()))
@@ -148,17 +153,15 @@ def plot_box(df_hvon):
   
     #sns.scatterplot(data=dfdmm, x="time", y="value", s=3, color='k')
 
-    badtime = ["2022-08-18", "2022-10-06", "2022-10-17", "2022-10-18", "2022-10-19"]
-    dfdmm = dfdmm[~dfdmm['time'].isin(badtime)]
+    #badtime = ["2022-08-18", "2022-10-06", "2022-10-17", "2022-10-18", "2022-10-19"]
+    #dfdmm = dfdmm[~dfdmm['time'].isin(badtime)]
     plt.plot(dfdmm['time'], dfdmm['value'], color='k')
+    #sns.boxplot(data=dfdm, x="time", y="value", meanline=True)
     
     plt.ylim(1.0, 2.4)
     plt.show()
 
-    plt.scatter(dfdmm['time'], dfdmm['value'], color='k')
-    plt.ylim(1.75, 2)
-    plt.show()
-    return dfdmm
+    return dfm
 
 
 def kde(df):
@@ -168,13 +171,37 @@ def kde(df):
         dfs = df[df['mod'] == mod]
         dfs['value'].plot.kde(ax=axes, legend=False)
     plt.show()
+
+
+def dist(df):
+    #dfm = df.groupby(df['time']).mean()
+    dfm = df.groupby('time').agg({'value': ['mean', 'std', 'sem']})
+    print(dfm)
+    dfm = dfm.xs('value', axis=1, drop_level=True)
+    dfm = dfm.reset_index('time')
+    dfm.rename(columns={"mean":"value"}, inplace=True)
+    dfm = dfm[dfm['value'] > 1.6]
+    print(dfm)
+
+    dfma = dfm[dfm['time'] < datetime(2022,8,22)]
+    dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
+
+    fig, ax = plt.subplots(1,2)
+    ax[0].fill_between(x=dfma['time'], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='g', alpha=0.3)
+    ax[0].errorbar(x=dfma['time'], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
+
+    ax[1].fill_between(x=dfmb['time'], y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='g', alpha=0.3)
+    ax[1].errorbar(x=dfmb['time'], y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='k', barsabove=True)
     
+    plt.show()
+
+
         
 if __name__=="__main__":
     dfo = get_dfs_from_paths('dcs_csv')
     df = get_df_hv_on(dfo)
     #lllines(df, 'value')
-    dfdm = plot_box(df) # df daily mean
-    
+    dfm = plot_box(df) 
+    dist(dfm)
     #kde(df)
     
