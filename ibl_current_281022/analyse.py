@@ -181,6 +181,7 @@ def plot_box(df_hvon, time_lut, x='time'):
     ]
     
     mods = list(set(df_hvon['mod'].to_list()))
+
     dfm = pd.DataFrame()
     dfdm = pd.DataFrame()
     for n,mod in enumerate(mods):
@@ -195,6 +196,7 @@ def plot_box(df_hvon, time_lut, x='time'):
         else:
             dft = df.groupby(df[x].dt.strftime("%Y-%m-%d %H"))["value"].max() # every hour
         dft = dft.reset_index()
+        dft['mod'] = mod[-2:]
         if n == 0:
             dfm = dft
         else:
@@ -208,15 +210,6 @@ def plot_box(df_hvon, time_lut, x='time'):
     return dfm
 
 
-def kde(df):
-    fig, axes = plt.subplots(figsize=(10,10))
-    mods = list(set(df['mod'].to_list()))
-    for n,mod in enumerate(mods):
-        dfs = df[df['mod'] == mod]
-        dfs['value'].plot.kde(ax=axes, legend=False)
-    plt.show()
-
-
 def dist(df, lumi_lut, x='time'):
     dfm = df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
     dfm = dfm.xs('value', axis=1, drop_level=True)
@@ -228,7 +221,6 @@ def dist(df, lumi_lut, x='time'):
 
     dfma = dfm[dfm['time'] < datetime(2022,8,22)]
     dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
-    print(dfmb.to_string())
 
     min_lumi = 0
     if plot_change:
@@ -249,6 +241,34 @@ def dist(df, lumi_lut, x='time'):
     ampl.set_ylabel("PP4LV_I (A)")
     plt.savefig("./plots/I-vs-lumi.pdf")
     plt.savefig("./plots/I-vs-lumi.png")
+    plt.show()
+
+    return dfm
+
+
+def dist_per_mod(df, lumi_lut, x='time'):
+    mods = list(set(df['mod']))
+    fig, ax = plt.subplots()
+    for m in mods:
+        _df = df[df['mod'] == m]
+        dfm = _df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
+        dfm = dfm.xs('value', axis=1, drop_level=True)
+        dfm = dfm.reset_index(x)
+        dfm.rename(columns={"mean":"value"}, inplace=True)
+        #dfm = dfm[dfm['value'] > 1.6]
+        dfm['time'] = dfm['lumi'].map(lumi_lut)
+        dfm['lumi'] = dfm['lumi'].divide(1e3)
+        
+        frmt = 'none'
+        
+        #p0 = ax.fill_between(x=dfm[x], y1=dfm['value']-dfm['std'], y2=dfm['value']+dfm['std'], color='k', alpha=0.2, step='mid')
+        ax.plot(dfm[x], dfm['value'], marker='o', markersize=4, linestyle="", label=m)
+        ax.errorbar(x=dfm[x], y=dfm['value'], yerr=dfm['sem'], fmt=frmt, marker='x', capsize=0.1)        
+
+    ax.legend(loc='lower right', fancybox=True)    
+    ampl.set_xlabel("LHC delivered integrated luminosity ($fb^{-1}$)")
+    ampl.set_ylabel("PP4LV_I (A)")
+    plt.savefig("./plots/I-vs-lumi_per_mod.pdf")
     plt.show()
 
     return dfm
@@ -281,6 +301,7 @@ if __name__=="__main__":
     #lllines(df, 'lumi', 'value')
     x = 'lumi'
     dfm = plot_box(df, time_lut, x=x) 
-    dfr = dist(dfm, time_lut, x=x)
+    #dfr = dist(dfm, time_lut, x=x)
+    dfr = dist_per_mod(dfm, time_lut, x=x)
     #dfr = dist(dfm, time_lut, x=x, plot_change=False, same_canvas=False, same_plot=False)
     
