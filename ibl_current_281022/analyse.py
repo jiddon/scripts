@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
+import atlas_mpl_style as ampl
+ampl.use_atlas_style()
+
 def get_lumi_daily():
     """
     get lumi per day
@@ -92,8 +95,7 @@ def get_dfs_from_paths(directory):
             dfi['mod'] = filename.replace("_PP4LV.csv", "")
             df = df.append(dfi, ignore_index=True)
         else:
-            msg = f"File {f} does not exist!"
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError()
     return df
 
 def llines(df, x, value):
@@ -219,10 +221,10 @@ def plot_box(df_hvon, time_lut, x='time'):
     dfdmm = dfdm.groupby(x).mean()
     dfdmm = dfdmm.reset_index()
 
-    if x != 'time':
-        sns.boxplot(data=dfm, x=x, y="value", meanline=True)
-    else:
-        sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
+    # if x != 'time':
+    #     sns.boxplot(data=dfm, x=x, y="value", meanline=True)
+    # else:
+    #     sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
         
     #sns.scatterplot(data=dfm, x=x, y="value", s=2, alpha=0.4)
     
@@ -234,8 +236,8 @@ def plot_box(df_hvon, time_lut, x='time'):
     #plt.plot(dfdmm[x], dfdmm['value'], color='k')
     #sns.boxplot(data=dfdm, x="time", y="value", meanline=True)
     
-    plt.ylim(1.0, 2.4)
-    plt.show()
+    #plt.ylim(1.0, 2.4)
+    #plt.show()
 
     return dfm
 
@@ -249,13 +251,14 @@ def kde(df):
     plt.show()
 
 
-def dist(df, lumi_lut, x='time', plot_change=False, same_canvas=False):
+def dist(df, lumi_lut, x='time'):
     dfm = df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
     dfm = dfm.xs('value', axis=1, drop_level=True)
     dfm = dfm.reset_index(x)
     dfm.rename(columns={"mean":"value"}, inplace=True)
     #dfm = dfm[dfm['value'] > 1.6]
     dfm['time'] = dfm['lumi'].map(lumi_lut)
+    dfm['lumi'] = dfm['lumi'].divide(1e3)
 
     dfma = dfm[dfm['time'] < datetime(2022,8,22)]
     dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
@@ -265,23 +268,25 @@ def dist(df, lumi_lut, x='time', plot_change=False, same_canvas=False):
     if plot_change:
         min_lumi = dfmb['lumi'].min()
 
-    if same_canvas:
-        fig, ax = plt.subplots()
-        ax.fill_between(x=dfma[x], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='k', alpha=0.2)
-        ax.errorbar(x=dfma[x], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
-        
-        ax.fill_between(x=dfmb[x]-min_lumi, y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='r', alpha=0.2)
-        ax.errorbar(x=dfmb[x]-min_lumi, y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='r', barsabove=True)
-    else:
-        fig, ax = plt.subplots(1,2)
-     
-        ax[0].fill_between(x=dfma[x], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='g', alpha=0.3)
-        ax[0].errorbar(x=dfma[x], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
-        
-        ax[1].fill_between(x=dfmb[x]-min_lumi, y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='g', alpha=0.3)
-        ax[1].errorbar(x=dfmb[x]-min_lumi, y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='k', barsabove=True)
+    frmt = 'none'
+
+    fig, ax = plt.subplots()
+    p0 = ax.fill_between(x=dfm[x], y1=dfm['value']-dfm['std'], y2=dfm['value']+dfm['std'], color='k', alpha=0.2, step='mid')
+    p1 = ax.plot(dfm[x], dfm['value'], marker='o', color='k', markersize=4, linestyle="")
+    p2 = ax.errorbar(x=dfm[x], y=dfm['value'], yerr=dfm['sem'], fmt=frmt, marker='x', color='k', capsize=0.1)        
+    ax.legend([p0, p1, p2], ['1$\sigma$', 'mean', 'sem'], loc='lower right', fancybox=True)
     
+    if plot_change:
+        ampl.set_xlabel("Cumulative integrated luminosity since base($fb^{-1}$)")
+    else:
+        ampl.set_xlabel("LHC delivered integrated luminosity ($fb^{-1}$)")
+    ampl.set_ylabel("PP4LV_I (A)")
+    plt.savefig("./plots/I-vs-lumi.pdf")
+    plt.savefig("./plots/I-vs-lumi.png")
     plt.show()
+
+    return dfm
+
 
 
 def plot_lumi(df):
@@ -299,7 +304,7 @@ if __name__=="__main__":
     dfl, lumi_lut, time_lut = get_lumi_lut()
     df = get_df_hv_on(dfo)
     df['lumi'] = df['time'].dt.date.map(lumi_lut)
-    print(f"Removing the following rows since lumi is undefined:")
+    print("Removing the following rows since lumi is undefined:")
     print(df[df['lumi'].isnull()])
     print("leaving:")
     df = df[df['lumi'].notnull()] 
@@ -310,6 +315,6 @@ if __name__=="__main__":
     #lllines(df, 'lumi', 'value')
     x = 'lumi'
     dfm = plot_box(df, time_lut, x=x) 
-    dist(dfm, time_lut, x=x, plot_change=False, same_canvas=False)
-    # #kde(df)
-    #13347.8
+    dfr = dist(dfm, time_lut, x=x)
+    #dfr = dist(dfm, time_lut, x=x, plot_change=False, same_canvas=False, same_plot=False)
+    
