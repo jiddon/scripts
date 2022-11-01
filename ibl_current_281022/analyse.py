@@ -107,27 +107,60 @@ def lllines(df_hvon, value):
     for n,mod in enumerate(mods):
         if n >= 0: # debug 
             df = df_hvon[df_hvon['mod'] == mod]
-            dft = df.groupby(df["time"].dt.date)["value"].max()
+            if x != 'time':
+                dft = df.groupby(df[x])["value"].max()
+            else:
+                dft = df.groupby(df[x].dt.date)["value"].max()
+                
             dft = dft.reset_index()
             
-            fig.add_trace(go.Scatter(x=dft['time'], y=dft[value],
+            fig.add_trace(go.Scatter(x=dft[x], y=dft[value],
                                      mode='lines+markers',
                                      name=mod))
     fig.write_html(value+".html")
     fig.show()
 
-def plot_box(df_hvon):
+def plot_box(df_hvon, time_lut, x='time'):
     """ mean of each day """
+    badtime =  [
+        "2022-07-07 12", "2022-07-07 13",
+        "2022-07-12 11", "2022-07-12 12", "2022-07-12 13", "2022-07-12 14", "2022-07-12 15", "2022-07-12 16", "2022-07-12 17", "2022-07-12 18", "2022-07-12 19",
+        "2022-07-13 10", "2022-07-13 11", "2022-07-13 12",
+        "2022-07-31 11", "2022-07-31 12", "2022-07-31 13",
+        "2022-08-05 12", "2022-08-05 13",
+        "2022-08-05 16", "2022-08-05 17",
+        "2022-08-22 14", "2022-08-22 15",
+        "2022-08-23 15", "2022-08-23 16",
+        "2022-08-25 16", "2022-08-25 17",
+        "2022-08-26 09", "2022-08-26 10",
+        "2022-09-28 11", "2022-09-28 12", "2022-09-28 13", "2022-09-28 14",
+        "2022-10-10 20",
+        "2022-10-12 11", "2022-10-12 12", "2022-10-12 13", "2022-10-12 14",
+        "2022-10-18 10",
+        "2022-10-23 15", "2022-10-23 16",
+        "2022-10-26 14"
+    ]
+
+    
     mods = list(set(df_hvon['mod'].to_list()))
     dfm = pd.DataFrame()
     dfdm = pd.DataFrame()
     for n,mod in enumerate(mods):
         df = df_hvon[df_hvon['mod'] == mod]
-        #dft = df.groupby(df["time"].dt.datetime)["value"].max()
-        dft = df.groupby(df["time"].dt.strftime("%Y-%m-%d %H"))["value"].max() # every hour
-        dft = dft.reset_index()
+        if x != 'time':
+            df['time'] = df['lumi'].map(time_lut)
+        df = df[~df['time'].dt.strftime("%Y-%m-%d %H").isin(badtime)]
         
-        dfd = df.groupby(df["time"].dt.strftime("%Y-%m-%d"))["value"].max() # every day
+        if x != 'time':
+            dft = df.groupby(df[x])["value"].max()
+        else:
+            dft = df.groupby(df[x].dt.strftime("%Y-%m-%d %H"))["value"].max() # every hour
+        dft = dft.reset_index()
+
+        if x != 'time':
+            dfd = df.groupby(df[x])["value"].max() # every day
+        else:
+            dfd = df.groupby(df[x].dt.strftime("%Y-%m-%d"))["value"].max() # every day
         dfd = dfd.reset_index()
         if n == 0:
             dfm = dft
