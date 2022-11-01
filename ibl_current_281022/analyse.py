@@ -1,4 +1,5 @@
 import csv
+import math
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -12,8 +13,40 @@ import os
 def get_lumi_daily():
     """
     get lumi per day
+    LStableDel is delivered stable lumi (pb^-1)
     """
+    dateparse = lambda x: datetime.strptime(x, '%y%m%d')
+    df = pd.read_csv('./daytable.csv', parse_dates=['Day'], date_parser=dateparse)
+    _lumi_del = reversed(df[' LStableDel'].to_list())
+    lumi_del = []
+    sum_so_far = 0
+    for l in _lumi_del:
+        sum_so_far = l + sum_so_far
+        lumi_del.append(sum_so_far)
+    lumi_del.reverse()
+    df['LSum'] = lumi_del
+    return df
 
+def get_lumi_lut():
+    dfl = get_lumi_daily()
+    df_lumi_lut = dfl.filter(['Day', 'LSum'], axis=1)
+    
+    days = df_lumi_lut['Day'].to_list()
+    sums = df_lumi_lut['LSum'].to_list()    
+    lumi_lut = {}
+    for n,i in enumerate(days):
+        lumi_lut[i] = sums[n]
+
+    df_time_lut = dfl.filter(['LSum', 'Day'], axis=1)
+    days = df_time_lut['Day'].to_list()
+    sums = df_time_lut['LSum'].to_list()    
+    time_lut = {}
+    for n,i in enumerate(sums):
+        time_lut[i] = days[n]
+    return dfl, lumi_lut, time_lut
+    
+
+    
 def normalise(dfo, col):
     result = pd.DataFrame()
     mods = list(set(dfo['mod'].to_list()))
@@ -73,7 +106,7 @@ def llines(df, x, value):
     fig = go.Figure()
     for mod in mods:
         df = _df[_df['mod'] == mod]
-        fig.add_trace(go.Scatter(x=df['time'], y=df[value],
+        fig.add_trace(go.Scatter(x=df[x], y=df[value],
                                  mode='lines+markers',
                                  name=mod))
     fig.write_html(value+".html")
@@ -97,7 +130,7 @@ def get_df_hv_on(_df):
     #df_hvon = normalise(_df_hvon, 'value')
     return df_hvon
 
-def lllines(df_hvon, value):
+def lllines(df_hvon, x, value):
     """
     line plot as a function of x for all modules
     """
@@ -169,26 +202,32 @@ def plot_box(df_hvon, time_lut, x='time'):
             dfm = dfm.append(dft)
             dfdm = dfdm.append(dfd)
 
-    dfm['time'] = pd.to_datetime(dfm['time'])
-    dfdm['time'] = pd.to_datetime(dfdm['time'])
+    if x == 'time':
+        dfm['time'] = pd.to_datetime(dfm['time'])
+        dfdm['time'] = pd.to_datetime(dfdm['time'])
     
-    dfm = dfm.sort_values(by='time')
-    dfdm = dfdm.sort_values(by='time')
+    dfm = dfm.sort_values(by=x)
+    dfdm = dfdm.sort_values(by=x)
     
-    dfmm = dfm.groupby('time').mean()
+    dfmm = dfm.groupby(x).mean()
     dfmm = dfmm.reset_index()
   
-    dfdmm = dfdm.groupby('time').mean()
+    dfdmm = dfdm.groupby(x).mean()
     dfdmm = dfdmm.reset_index()
+
+    # if x != 'time':
+    #     sns.boxplot(data=dfm, x=x, y="value", meanline=True)
+    # else:
+    #     sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
+        
+    sns.scatterplot(data=dfm, x=x, y="value", s=2, alpha=0.4)
     
-    #sns.boxplot(data=dfm, x="time", y="value", meanline=True)
-    sns.scatterplot(data=dfm, x="time", y="value", s=2, alpha=0.1)
-  
     #sns.scatterplot(data=dfdmm, x="time", y="value", s=3, color='k')
 
     #badtime = ["2022-08-18", "2022-10-06", "2022-10-17", "2022-10-18", "2022-10-19"]
-    #dfdmm = dfdmm[~dfdmm['time'].isin(badtime)]
-    plt.plot(dfdmm['time'], dfdmm['value'], color='k')
+    #dfdmm = dfdmm[~dfdmm[x].isin(badtime)]
+    
+    #plt.plot(dfdmm[x], dfdmm['value'], color='k')
     #sns.boxplot(data=dfdm, x="time", y="value", meanline=True)
     
     plt.ylim(1.0, 2.4)
@@ -206,35 +245,70 @@ def kde(df):
     plt.show()
 
 
-def dist(df):
-    #dfm = df.groupby(df['time']).mean()
-    dfm = df.groupby('time').agg({'value': ['mean', 'std', 'sem']})
+def dist(df, lumi_lut, x='time', plot_change=False, same_canvas=False):
+    print(df)
+    dfm = df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
     print(dfm)
     dfm = dfm.xs('value', axis=1, drop_level=True)
-    dfm = dfm.reset_index('time')
+    dfm = dfm.reset_index(x)
     dfm.rename(columns={"mean":"value"}, inplace=True)
-    dfm = dfm[dfm['value'] > 1.6]
+    #dfm = dfm[dfm['value'] > 1.6]
+    dfm['time'] = dfm['lumi'].map(lumi_lut)
     print(dfm)
+
 
     dfma = dfm[dfm['time'] < datetime(2022,8,22)]
     dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
 
-    fig, ax = plt.subplots(1,2)
-    ax[0].fill_between(x=dfma['time'], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='g', alpha=0.3)
-    ax[0].errorbar(x=dfma['time'], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
+    min_lumi = 0
+    if plot_change:
+        min_lumi = dfmb['lumi'].min()
 
-    ax[1].fill_between(x=dfmb['time'], y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='g', alpha=0.3)
-    ax[1].errorbar(x=dfmb['time'], y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='k', barsabove=True)
+    if same_canvas:
+        fig, ax = plt.subplots()
+        ax.fill_between(x=dfma[x], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='k', alpha=0.2)
+        ax.errorbar(x=dfma[x], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
+        
+        ax.fill_between(x=dfmb[x]-min_lumi, y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='r', alpha=0.2)
+        ax.errorbar(x=dfmb[x]-min_lumi, y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='r', barsabove=True)
+    else:
+        fig, ax = plt.subplots(1,2)
+     
+        ax[0].fill_between(x=dfma[x], y1=dfma['value']-dfma['std'], y2=dfma['value']+dfma['std'], color='g', alpha=0.3)
+        ax[0].errorbar(x=dfma[x], y=dfma['value'], yerr=dfma['sem'], fmt='none', marker='x', color='k', barsabove=True)
+        
+        ax[1].fill_between(x=dfmb[x]-min_lumi, y1=dfmb['value']-dfmb['std'], y2=dfmb['value']+dfmb['std'], color='g', alpha=0.3)
+        ax[1].errorbar(x=dfmb[x]-min_lumi, y=dfmb['value'], yerr=dfmb['sem'], fmt='none', marker='x', color='k', barsabove=True)
     
     plt.show()
+
+
+def plot_lumi(df):
+    """
+    plot total lumi to cross check with official plots.
+    """
+    df.plot('time', 'lumi')
+    plt.show()
+    
 
 
         
 if __name__=="__main__":
     dfo = get_dfs_from_paths('dcs_csv')
+    dfl, lumi_lut, time_lut = get_lumi_lut()
     df = get_df_hv_on(dfo)
-    #lllines(df, 'value')
-    dfm = plot_box(df) 
-    dist(dfm)
-    #kde(df)
+    df['lumi'] = df['time'].dt.date.map(lumi_lut)
+    print(f"Removing the following rows since lumi is undefined:")
+    print(df[df['lumi'].isnull()])
+    print("leaving:")
+    df = df[df['lumi'].notnull()] 
+    print(df)
+
+    
+    #plot_lumi(df)
+    #lllines(df, 'lumi', 'value')
+    x = 'time'
+    dfm = plot_box(df, time_lut, x=x) 
+    #dist(dfm, time_lut, x=x, plot_change=True, same_canvas=True)
+    # #kde(df)
     
