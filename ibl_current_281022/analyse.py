@@ -155,7 +155,7 @@ def lllines(df_hvon, x, value):
 
 def plot_box(df_hvon, time_lut, x='time'):
     """ mean of each day """
-    badtime =  [
+    badtime =  [ # monitoring scans 
         "2022-07-07 12", "2022-07-07 13",
         "2022-07-12 11", "2022-07-12 12", "2022-07-12 13", "2022-07-12 14", "2022-07-12 15", "2022-07-12 16", "2022-07-12 17", "2022-07-12 18", "2022-07-12 19",
         "2022-07-13 10", "2022-07-13 11", "2022-07-13 12",
@@ -173,7 +173,10 @@ def plot_box(df_hvon, time_lut, x='time'):
         "2022-10-23 15", "2022-10-23 16",
         "2022-10-26 14"
     ]
-
+    badday = [
+        "2022-10-06", #
+        "2022-10-19", # broken optoboard day
+    ]
     
     mods = list(set(df_hvon['mod'].to_list()))
     dfm = pd.DataFrame()
@@ -183,7 +186,8 @@ def plot_box(df_hvon, time_lut, x='time'):
         if x != 'time':
             df['time'] = df['lumi'].map(time_lut)
         df = df[~df['time'].dt.strftime("%Y-%m-%d %H").isin(badtime)]
-        
+        df = df[~df['time'].dt.strftime("%Y-%m-%d").isin(badday)]
+
         if x != 'time':
             dft = df.groupby(df[x])["value"].max()
         else:
@@ -215,12 +219,12 @@ def plot_box(df_hvon, time_lut, x='time'):
     dfdmm = dfdm.groupby(x).mean()
     dfdmm = dfdmm.reset_index()
 
-    # if x != 'time':
-    #     sns.boxplot(data=dfm, x=x, y="value", meanline=True)
-    # else:
-    #     sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
+    if x != 'time':
+        sns.boxplot(data=dfm, x=x, y="value", meanline=True)
+    else:
+        sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
         
-    sns.scatterplot(data=dfm, x=x, y="value", s=2, alpha=0.4)
+    #sns.scatterplot(data=dfm, x=x, y="value", s=2, alpha=0.4)
     
     #sns.scatterplot(data=dfdmm, x="time", y="value", s=3, color='k')
 
@@ -246,19 +250,16 @@ def kde(df):
 
 
 def dist(df, lumi_lut, x='time', plot_change=False, same_canvas=False):
-    print(df)
     dfm = df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
-    print(dfm)
     dfm = dfm.xs('value', axis=1, drop_level=True)
     dfm = dfm.reset_index(x)
     dfm.rename(columns={"mean":"value"}, inplace=True)
     #dfm = dfm[dfm['value'] > 1.6]
     dfm['time'] = dfm['lumi'].map(lumi_lut)
-    print(dfm)
-
 
     dfma = dfm[dfm['time'] < datetime(2022,8,22)]
     dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
+    print(dfmb.to_string())
 
     min_lumi = 0
     if plot_change:
@@ -307,8 +308,8 @@ if __name__=="__main__":
     
     #plot_lumi(df)
     #lllines(df, 'lumi', 'value')
-    x = 'time'
+    x = 'lumi'
     dfm = plot_box(df, time_lut, x=x) 
-    #dist(dfm, time_lut, x=x, plot_change=True, same_canvas=True)
+    dist(dfm, time_lut, x=x, plot_change=False, same_canvas=False)
     # #kde(df)
-    
+    #13347.8
