@@ -195,55 +195,21 @@ def plot_box(df_hvon, time_lut, x='time'):
         else:
             dft = df.groupby(df[x].dt.strftime("%Y-%m-%d %H"))["value"].max() # every hour
         dft = dft.reset_index()
-
-        if x != 'time':
-            dfd = df.groupby(df[x])["value"].max() # every day
-        else:
-            dfd = df.groupby(df[x].dt.strftime("%Y-%m-%d"))["value"].max() # every day
-        dfd = dfd.reset_index()
         if n == 0:
             dfm = dft
-            dfdm = dfd
         else:
             dfm = dfm.append(dft)
-            dfdm = dfdm.append(dfd)
 
     if x == 'time':
         dfm['time'] = pd.to_datetime(dfm['time'])
-        dfdm['time'] = pd.to_datetime(dfdm['time'])
     
     dfm = dfm.sort_values(by=x)
-    dfdm = dfdm.sort_values(by=x)
-    
-    dfmm = dfm.groupby(x).mean()
-    dfmm = dfmm.reset_index()
-  
-    dfdmm = dfdm.groupby(x).mean()
-    dfdmm = dfdmm.reset_index()
-
-    # if x != 'time':
-    #     sns.boxplot(data=dfm, x=x, y="value", meanline=True)
-    # else:
-    #     sns.boxplot(data=dfdm, x=x, y="value", meanline=True)
-        
-    #sns.scatterplot(data=dfm, x=x, y="value", s=2, alpha=0.4)
-    
-    #sns.scatterplot(data=dfdmm, x="time", y="value", s=3, color='k')
-
-    #badtime = ["2022-08-18", "2022-10-06", "2022-10-17", "2022-10-18", "2022-10-19"]
-    #dfdmm = dfdmm[~dfdmm[x].isin(badtime)]
-    
-    #plt.plot(dfdmm[x], dfdmm['value'], color='k')
-    #sns.boxplot(data=dfdm, x="time", y="value", meanline=True)
-    
-    #plt.ylim(1.0, 2.4)
-    #plt.show()
 
     return dfm
 
 
 def kde(df):
-    fig, axes = plt.subplots(figsize=(10,10))#, sharey=True)
+    fig, axes = plt.subplots(figsize=(10,10))
     mods = list(set(df['mod'].to_list()))
     for n,mod in enumerate(mods):
         dfs = df[df['mod'] == mod]
