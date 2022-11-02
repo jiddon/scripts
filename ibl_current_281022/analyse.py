@@ -117,6 +117,7 @@ def llines(df, x, value):
 def get_df_hv_on(_df):
     hv = pd.read_csv('hv.csv', names=["time", "hv"],  parse_dates=['time'])
     hv['hv'] = np.where(hv['hv'] > 449, 1, 0) # 1 is HV on
+    #hv['hv'] = np.where(hv['hv'] < 0.2, 1, 0) # 1 is HV off
 
     #_df.drop(_df[_df['value'] < 1.5].index, inplace=True) # require current to be greater than cut
     
@@ -179,6 +180,18 @@ def plot_box(df_hvon, time_lut, x='time'):
         "2022-10-06", #
         "2022-10-19", # broken optoboard day
     ]
+
+    ## for standby:
+    # badday= [
+    #     "2022-07-28", # HV interlock
+    #     "2022-08-01", # HV interlock
+    #     "2022-08-07", #
+    #     "2022-08-14", # HV interlock
+    #     "2022-08-17", # thermosiphon trip
+    #     "2022-10-21", #
+    #     "2022-10-23", # HV interlock
+    #     "2022-10-26", # HV interlock
+    # ]
     
     mods = list(set(df_hvon['mod'].to_list()))
 
@@ -216,28 +229,21 @@ def dist(df, lumi_lut, x='time'):
     dfm = dfm.reset_index(x)
     dfm.rename(columns={"mean":"value"}, inplace=True)
     #dfm = dfm[dfm['value'] > 1.6]
-    dfm['time'] = dfm['lumi'].map(lumi_lut)
-    dfm['lumi'] = dfm['lumi'].divide(1e3)
-
-    dfma = dfm[dfm['time'] < datetime(2022,8,22)]
-    dfmb = dfm[dfm['time'] > datetime(2022,9,28)]
-
-    min_lumi = 0
-    if plot_change:
-        min_lumi = dfmb['lumi'].min()
+    if x != 'time':
+        dfm['time'] = dfm['lumi'].map(lumi_lut)
+        dfm['lumi'] = dfm['lumi'].divide(1e3)
 
     frmt = 'none'
 
+    print(dfm.to_string())
+    
     fig, ax = plt.subplots()
     p0 = ax.fill_between(x=dfm[x], y1=dfm['value']-dfm['std'], y2=dfm['value']+dfm['std'], color='k', alpha=0.2, step='mid')
     p1 = ax.plot(dfm[x], dfm['value'], marker='o', color='k', markersize=4, linestyle="")
     p2 = ax.errorbar(x=dfm[x], y=dfm['value'], yerr=dfm['sem'], fmt=frmt, marker='x', color='k', capsize=0.1)        
     ax.legend([p0, p1, p2], ['1$\sigma$', 'mean', 'sem'], loc='lower right', fancybox=True)
     
-    if plot_change:
-        ampl.set_xlabel("Cumulative integrated luminosity since base($fb^{-1}$)")
-    else:
-        ampl.set_xlabel("LHC delivered integrated luminosity ($fb^{-1}$)")
+    ampl.set_xlabel("LHC delivered integrated luminosity ($fb^{-1}$)")
     ampl.set_ylabel("PP4LV_I (A)")
     plt.savefig("./plots/I-vs-lumi.pdf")
     plt.savefig("./plots/I-vs-lumi.png")
@@ -249,27 +255,46 @@ def dist(df, lumi_lut, x='time'):
 def dist_per_mod(df, lumi_lut, x='time'):
     mods = list(set(df['mod']))
     fig, ax = plt.subplots()
-    for m in mods:
+    colors = ['k', 'b', 'r', 'c']
+    dfs = pd.DataFrame()
+    for n,m in enumerate(mods):
         _df = df[df['mod'] == m]
         dfm = _df.groupby(x).agg({'value': ['mean', 'std', 'sem']})
         dfm = dfm.xs('value', axis=1, drop_level=True)
-        dfm = dfm.reset_index(x)
+        dfm = dfm.reset_index()
         dfm.rename(columns={"mean":"value"}, inplace=True)
         #dfm = dfm[dfm['value'] > 1.6]
         dfm['time'] = dfm['lumi'].map(lumi_lut)
         dfm['lumi'] = dfm['lumi'].divide(1e3)
+        dfm['mod'] = int(m[-1])
+        dfs = dfs.append(dfm)
         
-        frmt = 'none'
         
+        frmt = 'none'        
         #p0 = ax.fill_between(x=dfm[x], y1=dfm['value']-dfm['std'], y2=dfm['value']+dfm['std'], color='k', alpha=0.2, step='mid')
-        ax.plot(dfm[x], dfm['value'], marker='o', markersize=4, linestyle="", label=m)
-        ax.errorbar(x=dfm[x], y=dfm['value'], yerr=dfm['sem'], fmt=frmt, marker='x', capsize=0.1)        
+        ax.plot(dfm[x], dfm['value'], marker='o', markersize=4, label=m, color=colors[n])
+        ax.errorbar(x=dfm[x], y=dfm['value'], yerr=dfm['sem'], fmt=frmt, marker='x', capsize=3, color=colors[n])        
 
     ax.legend(loc='lower right', fancybox=True)    
-    ampl.set_xlabel("LHC delivered integrated luminosity ($fb^{-1}$)")
+    ampl.set_xlabel("Run 3 LHC delivered integrated luminosity ($fb^{-1}$)")
     ampl.set_ylabel("PP4LV_I (A)")
     plt.savefig("./plots/I-vs-lumi_per_mod.pdf")
     plt.show()
+
+    print(dfs)
+    # fig, ax = plt.subplots(2,2)
+    # for n,m in enumerate(range(1,5)):
+    #     ax[n//2, n%2] =
+    
+    fig, ax = plt.subplots()
+    for n,m in enumerate(range(1,5)):
+        dfsm = dfs[dfs['mod'] == m] 
+        ax.hist(dfsm['value'], label="M"+str(m), color=colors[n], alpha=0.2, bins=50)
+    ax.legend(loc='upper right', fancybox=True)    
+    ampl.set_xlabel("PP4LV_I (A)")
+    ampl.set_ylabel("Frequency")
+    plt.show()        
+        
 
     return dfm
 
@@ -299,9 +324,16 @@ if __name__=="__main__":
     
     #plot_lumi(df)
     #lllines(df, 'lumi', 'value')
+    
     x = 'lumi'
     dfm = plot_box(df, time_lut, x=x) 
-    #dfr = dist(dfm, time_lut, x=x)
-    dfr = dist_per_mod(dfm, time_lut, x=x)
+    dist(dfm, time_lut, x=x)
+    dist_per_mod(dfm, time_lut, x=x)
+
+    # x = 'time'
+    # dfm = plot_box(df, lumi_lut, x=x) 
+    # dist(dfm, lumi_lut, x=x)
+
+
     #dfr = dist(dfm, time_lut, x=x, plot_change=False, same_canvas=False, same_plot=False)
     
